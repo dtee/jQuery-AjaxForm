@@ -28,6 +28,14 @@ log = function(value) {
             errorElement.css('display', 'none').html('');
         }
     };
+    
+    var onSessionStart = function($form) {
+        $form.find('input:text, input:password, textarea').hint('removeHint');
+    };
+    
+    var onSessionEnd = function($form) {
+        $form.find('input:text, input:password, textarea').hint('showHint');
+    };
 
     /**
      * Serialize form data + any custom data
@@ -105,6 +113,9 @@ log = function(value) {
         error_renderer: renderError,      // format error 
         custom_success : null,            // call back after ajax is done
         custom_failure : null,            // call on failure
+        
+        onSessionStart: onSessionStart,
+        onSessionEnd :  onSessionEnd
     };
 
     /**
@@ -223,6 +234,9 @@ log = function(value) {
         if (this.options.buttons) {
             this.options.buttons.attr('disabled', true);
         }
+
+        // Call pre
+        this.options.onSessionStart(this.$form);
         
         // Set all input to readonly
         this.$form.find('input').attr('readonly', true)
@@ -244,7 +258,8 @@ log = function(value) {
             clearTimeout(this.sessionTimeoutHandle);
         }
         this.sessionTimeoutHandle = null;
-        
+
+        this.options.onSessionEnd(this.$form);
         if (keepSessionAlive)
         {
             return;
