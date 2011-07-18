@@ -219,11 +219,11 @@ log = function(value) {
      * 4. Set input fields to readonly
      */
     AjaxForm.prototype.startSession = function() {
-        if (this.options.disable_session_lock) {
+        var me = this;
+        if (!this.options.disable_session_lock) {
             // Let session time out after specified timeout
             this.sessionTimeoutHandle = setTimeout(function() {
-                this.sessionTimeoutHandle = null;
-                this.endSession();
+                me.endSession();
             }, this.options.timeout);
         }
 
