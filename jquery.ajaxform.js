@@ -200,7 +200,7 @@ log = function(value) {
         options.error = this.error;         // Can't let user override this function
 
         // If we have ajaxSubmit library installed
-        if ($.fn.ajaxSubmit) {
+        if ($.fn.ajaxSubmit && options.ajax_upload) {
             this.$form.ajaxSubmit(options);
         }
         else {
