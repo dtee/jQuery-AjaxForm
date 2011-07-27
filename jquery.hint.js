@@ -4,12 +4,20 @@
         var $this = $(this);
         
         if ($this.val() == '') {
-            if (this.type == 'password') {
-                this.type = 'text';
+            var placeHolderVal = $this.attr('placeholder');
+            if (this.type != undefined && this.type == 'password') {
+                try {
+                    this.type = 'text';
+                }
+                catch (e) {
+                    // TODO: handle exception
+                    placeHolderVal = "";
+                }
+                
                 $this.data('old_type', 'password');
             }
             
-            $this.addClass('auto-hint').val($this.attr('placeholder'));
+            $this.addClass('auto-hint').val(placeHolderVal);
         }
     };
     
