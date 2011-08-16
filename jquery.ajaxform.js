@@ -97,6 +97,7 @@ log = function(value) {
     };
     
     AjaxForm.options = {
+		msg_error: 'Your request cannot be processed at this time. The server is busy, please try again later.',
         disable_session_lock : false, // Allow only one submit at a time
 
         class_bad : 'bad',
@@ -163,7 +164,7 @@ log = function(value) {
             this.options.custom_failure(jqXHR, textStatus, errorThrown);
         }
         else {
-            alert('error...');
+            alert(this.options.msg_error);
         }
 
         this.endSession();
