@@ -10,8 +10,21 @@
                     this.type = 'text';
                 }
                 catch (e) {
-                    // TODO: handle exception
-                    placeHolderVal = "";
+                    // IN IE, lets replace password field with text
+                    $this.css('display', 'none');
+                    var after = $this.find('+ input[type=text]');
+                    if (!(after.length >= 1 && after.hasClass('placeHolderText'))) {
+						var div = $('<input type="text" class="auto-hint placeHolderText" />');
+						div.val(placeHolderVal);
+						div.focus(function() {
+							$this.css('display', 'block');
+							$this.focus();
+							div.remove();
+						});
+						
+                    	$this.after(div);
+					}
+					placeHolderVal = "";
                 }
                 
                 $this.data('old_type', 'password');
