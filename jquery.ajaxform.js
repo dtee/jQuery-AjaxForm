@@ -12,8 +12,11 @@ log = function(value) {
      * @params $container jQuery object of possible container (div, span, etc)
      * @params errors array of error for the container
      */
-   var renderError = function($container, errors) {
+   var renderError = function(params) {
+        var $container = params.container;
+        var errors = params.errors;
         var errorElement = $container.find('> .error');
+        
         if (errorElement.length == 0) {
             errorElement = $('<div class="error" />');
             $container.append(errorElement);
@@ -78,6 +81,7 @@ log = function(value) {
         // Try to guess url to submit to
         if (!options.url) {
             options.url = $form.attr('action');
+            
             if (! options.url) {
                 options.url = window.location.href;
             }
@@ -129,16 +133,30 @@ log = function(value) {
         var isErrorFree = true;
         for ( var index in errorList) {
             var errors = errorList[index];
-            var container = this.$form.find('#' + index + '-container');
-            if (container.length == 0) {
-                container = this.$form.find('#' + index).parent();
-            }
+            var container = null;
             
-            if (errors && errors.length > 0) {
-                isErrorFree = false;
-            }
-
-            this.options.error_renderer(container, errors);
+            try {
+                container = this.$form.find('#' + index + '-container');
+                if (container.length == 0) {
+                    container = this.$form.find('#' + index).parent();
+                }
+                
+                if (errors && errors.length > 0) {
+                    isErrorFree = false;
+                }
+            } 
+            catch (ex) {}
+            
+            container = (!container) ? this.$form : container;
+            
+            var params = {
+                    container: container,
+                    errors: errors,
+                    default_renderer: renderError,
+                    index: index
+            };
+            
+            this.options.error_renderer.apply(this, [params]);
         }
         
         // Only call custom sucess function if it free form error
