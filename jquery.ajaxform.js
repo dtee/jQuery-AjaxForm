@@ -236,9 +236,6 @@ log = function(value) {
             this.success.apply(this, [errors]);
         }
         else {
-            log('pre validat success...');
-            return;
-            
             // If we have ajaxSubmit library installed
             if ($.fn.ajaxSubmit && options.ajax_upload) {
                 this.$form.ajaxSubmit(options);
