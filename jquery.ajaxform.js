@@ -118,6 +118,7 @@ log = function(value) {
         error_renderer: renderError,      // format error 
         custom_success : null,            // call back after ajax is done
         custom_failure : null,            // call on failure
+        pre_validate: null,             // Call before ajax submit
         
         onSessionStart: onSessionStart,
         onSessionEnd :  onSessionEnd
@@ -127,7 +128,14 @@ log = function(value) {
      * See jQuery.ajax.success(data, textStatus, jqXHR)
      */
     AjaxForm.prototype.success = function(data, status, xhr) {
-        var returnedJson = $.parseJSON(data);
+        if ($.isArray(data) || $.isPlainObject(data))
+        {
+            var returnedJson = data;
+        }
+        else 
+        {
+            var returnedJson = $.parseJSON(data);
+        }
         var errorList = returnedJson.error;
 
         var isErrorFree = true;
@@ -217,13 +225,27 @@ log = function(value) {
         options.type = 'POST';                      // Post is best
         options.success = this.success;     // Can't let user override this function
         options.error = this.error;         // Can't let user override this function
+        var errors = null;
+        
+        if (options.pre_validate && $.isFunction(options.pre_validate)) {
+            errors = options.pre_validate.apply(this, [options]);
+        }
 
-        // If we have ajaxSubmit library installed
-        if ($.fn.ajaxSubmit && options.ajax_upload) {
-            this.$form.ajaxSubmit(options);
+        if ($.isPlainObject(errors) || $.isArray(errors))
+        {
+            this.success.apply(this, [errors]);
         }
         else {
-            $.ajax(options);
+            log('pre validat success...');
+            return;
+            
+            // If we have ajaxSubmit library installed
+            if ($.fn.ajaxSubmit && options.ajax_upload) {
+                this.$form.ajaxSubmit(options);
+            }
+            else {
+                $.ajax(options);
+            }
         }
         
         return false;
