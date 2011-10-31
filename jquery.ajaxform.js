@@ -116,8 +116,8 @@ log = function(value) {
 
         // Define functions
         error_renderer: renderError,      // format error 
-        custom_success : null,            // call back after ajax is done
-        custom_failure : null,            // call on failure
+        busy_start: null,
+        busy_stop: null,
         pre_validate: null,             // Call before ajax submit
         
         onSessionStart: onSessionStart,
@@ -175,11 +175,13 @@ log = function(value) {
         // Window redirect, we should keep buttons disabled
         if (returnedJson.href) {
             window.location.href = returnedJson.href;
-            this.endSession(true);
+            var event = {success: true, keep_busy_on_success: true};
         }
         else {
-            this.endSession();       // Enable user to submit again
+            var event = {success: true};       // Enable user to submit again
         }
+        
+        this.endSession.apply(this, [event]);
     };
 
     /**
@@ -193,7 +195,7 @@ log = function(value) {
             alert(this.options.msg_error);
         }
 
-        this.endSession();
+        this.endSession.apply(this, [{success: false}]);
     };
 
     /**
@@ -206,7 +208,9 @@ log = function(value) {
      * @param options {} additional this.options override
      */
     AjaxForm.prototype.submit = function(options) {
+        log('submit is hit...');
         if (this.sessionTimeoutHandle) {      // do nothing - prevents double submit
+            log('session has not ended');
             return;
         }
 
@@ -217,16 +221,16 @@ log = function(value) {
             options = $.extend({}, this, this.options);
         }
 
-        this.startSession(); // Start up a session
-        data = {};      // Allow customd data
-        
+        data = {};      // settings for $.ajax()
         options.data = serialize(this.$form, data);      // Re-init data
         options.dataType = 'text';                  // Lets submit text, jquery silently sollow parse error
         options.type = 'POST';                      // Post is best
         options.success = this.success;     // Can't let user override this function
         options.error = this.error;         // Can't let user override this function
+        options.context = this;
         var errors = null;
-        
+
+        this.startSession.apply(this, [{ajax_options: options}]); // Start up a session
         if (options.pre_validate && $.isFunction(options.pre_validate)) {
             errors = options.pre_validate.apply(this, [options]);
         }
@@ -256,28 +260,21 @@ log = function(value) {
      * 3. todo: show progress bar
      * 4. Set input fields to readonly
      */
-    AjaxForm.prototype.startSession = function() {
+    AjaxForm.prototype.startSession = function(event) {
         var me = this;
         if (!this.options.disable_session_lock) {
             // Let session time out after specified timeout
             this.sessionTimeoutHandle = setTimeout(function() {
-                me.endSession();
+                me.endSession.apply(me, [{success: false}]);
             }, this.options.timeout);
         }
 
         // Reset all errors
         this.$form.find('.error').html('').css('display', 'none');
 
-        // We can be fancy here... disable all buttons, add spinner, make input fields readonly
-        if (this.options.buttons) {
-            this.options.buttons.attr('disabled', true);
-        }
-
-        // Call pre
-        this.options.onSessionStart(this.$form);
-        
-        // Set all input to readonly
-        this.$form.find('input').attr('readonly', true)
+        // Let delegate session Start
+        this.options.onSessionStart.apply(this, [event]);
+        this.$form.trigger('sessionStart',  {options: this.options});
     };
 
     /**
@@ -290,26 +287,16 @@ log = function(value) {
      *  setting window.location.href (It takes a while to load next page, and we want user to see
      *  progress bar)
      */
-    AjaxForm.prototype.endSession = function(keepSessionAlive) {
+    AjaxForm.prototype.endSession = function(event) {
         // Request finished before our session end
         if (this.sessionTimeoutHandle) {
             clearTimeout(this.sessionTimeoutHandle);
         }
-        this.sessionTimeoutHandle = null;
 
-        this.options.onSessionEnd(this.$form);
-        if (keepSessionAlive)
-        {
-            return;
-        }
-        
-        // Time to undo our fancyness
-        if (this.options.buttons) {
-            this.options.buttons.attr('disabled', false);
-        }
-        
-        // Un-set all input to readonly
-        this.$form.find('input').attr('readonly', false)
+        this.options.onSessionEnd.apply(this, [event]);
+        this.$form.trigger('sessionEnd', event);
+
+        this.sessionTimeoutHandle = null;
     };
     
     /****************** jQuery Plugin starts here functions ******************/
@@ -341,7 +328,7 @@ log = function(value) {
     };
     
     methods.submit = function(options) {
-        return this.each(function() {
+        return this.each(function() { 
             $this = $(this);
             
             // If the element is not form element, continue on
@@ -372,5 +359,10 @@ log = function(value) {
                 $.error('Method ' + method + ' does not exist on jQuery.ajaxForm');
             }
         }
+    };
+    
+    // Allow override of default options
+    $.ajaxForm = function(options) {
+        AjaxForm.options = $.extend(AjaxForm.options, options);
     };
 })(jQuery);
