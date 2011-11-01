@@ -168,8 +168,8 @@ log = function(value) {
         }
         
         // Only call custom sucess function if it free form error
-        if (this.custom_success && isErrorFree) {
-            this.custom_success(returnedJson);
+        if (this.options.custom_success && isErrorFree) {
+            this.options.custom_success(returnedJson);
         }
 
         // Window redirect, we should keep buttons disabled
