@@ -47,7 +47,16 @@ log = function(value) {
      * @returns
      */
     var serialize = function(form, data) {
-        var serializedData = form.serializeArray();
+        try
+        {
+            var serializedData = form.serializeArray();
+        }
+        catch (e)
+        {
+            // TODO: handle exception
+            log(e);
+        }
+        
         for ( var key in data) {
             value = $.toJSON(data[key]);
             serializedData.push({
@@ -208,9 +217,7 @@ log = function(value) {
      * @param options {} additional this.options override
      */
     AjaxForm.prototype.submit = function(options) {
-        log('submit is hit...');
         if (this.sessionTimeoutHandle) {      // do nothing - prevents double submit
-            log('session has not ended');
             return;
         }
 
