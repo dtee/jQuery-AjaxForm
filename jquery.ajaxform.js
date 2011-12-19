@@ -180,6 +180,10 @@ log = function(value) {
         if (this.options.custom_success && isErrorFree) {
             this.options.custom_success(returnedJson);
         }
+        else if (!isErrorFree && this.options.custom_error)
+        {
+            this.options.custom_error(errorList);
+        }
 
         // Window redirect, we should keep buttons disabled
         if (returnedJson.href) {
