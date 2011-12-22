@@ -233,7 +233,6 @@ log = function(value) {
         }
 
         data = {};      // settings for $.ajax()
-        options.data = serialize(this.$form, data);      // Re-init data
         options.dataType = 'text';                  // Lets submit text, jquery silently sollow parse error
         options.type = 'POST';                      // Post is best
         options.success = this.success;     // Can't let user override this function
@@ -245,6 +244,8 @@ log = function(value) {
         if (options.pre_validate && $.isFunction(options.pre_validate)) {
             errors = options.pre_validate.apply(this, [options]);
         }
+        
+        options.data = serialize(this.$form, data);      // Re-init data
 
         if ($.isPlainObject(errors) || $.isArray(errors))
         {
